@@ -1,0 +1,3 @@
+uppercase.txt
+lowercasesplitwise.txt
+sort.txt
