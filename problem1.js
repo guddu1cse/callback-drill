@@ -5,124 +5,43 @@
         1. Create a directory of random JSON files
         2. Delete those files simultaneously 
 */
-const fs = require("fs");
+const fs = require("fs").promises;
 const path = require("path");
-const directory = path.resolve(__dirname , "/output")
+const directory = path.resolve(__dirname , "./data/output");
+
+    const randomFileName = getRandomString(10);
+    const fullPath = path.resolve(__dirname , `./data/output/${randomFileName}.json`);
+    const data = getRandomJsonObject(20);
 
 function createDir(){
 
-    const randomFileName = getRandomString(10);
-    const fullPath = path.resolve(__dirname , `./output/${randomFileName}.json`);
-    const data = getRandomJsonObject(20);
-
-    const promise = new Promise((resolve , reject)=>{
-        if(!fs.existsSync(directory)) resolve();
-        else reject();
-    });
-
-    promise
-    .then(()=> {
-        //creating dir
-        cretingDirAndWritingFile(fullPath , data);
-        console.log("output dir created !");
-    })
-    .catch(()=>{
-        console.log("output dir already created");
-        //writing the file if dir already present
-        writeFile(fullPath , data);
-    });
-}
-
-function cretingDirAndWritingFile(fullPath , data){
-    const promise= new Promise((resolve , reject)=>{
-        fs.mkdir( fullPath.substring(0 , fullPath.lastIndexOf("/")+1) , (err)=>{
-            if(err){
-                reject("path already exist");
-                return ;
-            }
-            console.log("dir output created");
-            resolve();
-        });
-    });
-   
-    promise
-    .then(() =>writeFile(fullPath , data))
-    .catch((error)=> console.log(error));
-}
-
-//writing and deleting at same time
-function writeFile(fullPath , data ){
-
-    const promise = new Promise((resolve , reject)=>{
-        fs.writeFile(fullPath , JSON.stringify(data , null , 2) ,'utf-8', (err)=>{
-            if(err) {
-                reject(err);
-                return ;
-            }
-            resolve(`${fullPath.substring(fullPath.lastIndexOf("/")+1)} file writen successfully`);
-        });
-    });
-
-    promise
+    fs.access(directory)
     .then((res)=>{
-        console.log(res);
-        unlinkFile(fullPath);
-    })
-    .catch((err)=> console.log(err));
+        console.log("file exist");
+        writeFile();
+    }).catch((error)=>{
+        console.log("error->" ,error);
+        createDir();
+    });
 }
 
-//deleting the file/dir
-function unlinkFile(fullPath){
-    isExists(fullPath)
-    .then((res)=>{
-        const fileUnlink = new Promise((resolve , reject)=>{
-            fs.unlink(fullPath , (err)=>{
-                if(err) {
-                    reject(err);
-                    return ;
-                }
-                resolve(`${fullPath.substring(fullPath.lastIndexOf("/")+1)} deleted`);
+function createDir(){
+    fs.mkdir(directory).then(()=>{
+         writeFile();
+    });
+}
+
+function writeFile(){
+     fs.writeFile(fullPath , JSON.stringify(data , null, 2) ).then(()=>{
+        setTimeout(()=>{
+             fs.unlink(fullPath).then(()=>{
+                console.log(`${randomFileName} is deleted !`);
+
+                setTimeout(()=>{
+                    fs.rm(directory , {recursive : true});
+                },10000);
             });
-        });
-
-        fileUnlink
-        .then((res)=>{
-            console.log(res);
-            unlinkDir(fullPath.substring(0 , fullPath.lastIndexOf("/")));
-        }).catch((err)=>{
-            console.log(err);
-        })
-        console.log(res)
-    })
-    .catch((error)=>{
-        console.log(error);
-    });
-}
-
-//deleting dir
-function unlinkDir(directory){
-    isExists(directory)
-    .then((res)=>{
-
-        fs.rm(directory, {recursive:true , force:true} , (err)=>{
-            if(err) {
-                console.log(err , "deleting dir. failed ");
-                return ;
-            }
-            console.log("dir is deleted");
-        });
-        console.log(res);
-    }).catch((err)=>{
-        console.log(err);
-    });
-}
-
-function isExists(fullPath){
-    return new Promise((resolve , reject)=>{
-        if(fs.existsSync(fullPath)){
-            resolve(`${fullPath} is exists !`);
-        }
-        else reject(`${fullPath} is not exists !`);
+        } , 10000);
     });
 }
 
