@@ -111,16 +111,21 @@ function problem2(){
         res = res.map((val)=> val.trim()).filter((val)=> val.length>0);
         res.push(filenames);
         console.log(res);
+        const promises = [];
 
         res.forEach((file)=>{
-            setTimeout(()=>{
-                fs.unlink(getPath(`./data/${file}`), (err)=>{
-                    if(err) console.log(err);
-                    else console.log(`${file} deleted !`);
-                });
-            }, 5000);
+            const promise = new Promise((resolve , reject)=>{
+                setTimeout(()=>{
+                    fs.unlink(getPath(`./data/${file}`), (err)=>{
+                        if(err) reject(err);
+                        else resolve(`${file} deleted !`);
+                    });
+                }, 5000);
+            });
+            promises.push(promise);
         });
-    })
+        return Promise.allSettled(promises);
+    }).then((res)=>console.log(res))
     .catch((err)=> console.log(err));
     
 }
