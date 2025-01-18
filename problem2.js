@@ -12,122 +12,69 @@
         5. Read the contents of filenames.txt and delete all the new files that are mentioned in that list simultaneously.
 */
 
-const fs = require('fs');
+const fs = require('fs').promises;
 const path = require('path');
 
-function problem2(){
+async function problem2(){
     const filenames = "filenames.txt";
+    let filename= "uppercase.txt";
     //step -1 read the lipsum_2.txt
-    const readTxt = new Promise((resolve , reject)=>{
-        fs.readFile(getPath("./data/lipsum_2.txt") , "utf-8" , (err , data)=>{
-            if(err) reject(err);
-            else resolve(data);
-        })
-    });
+    return await fs.readFile(getPath("./data/lipsum_2.txt") , "utf-8")
+    .then(async(res)=>{
+        console.log("");
+        return await fs.writeFile(getPath(`./data/${filename}`) , res.toUpperCase())
+        .then(async()=>{
+            return await fs.appendFile(getPath(`./data/${filenames}`) , filename + "\n")
+            .then(async()=>{
+                return await fs.readFile(getPath(`./data/${filename}`) , "utf-8")
+                .then(async(res)=>{
+                    res = res.toLowerCase().split(" ");
+                    res = res.map((val) => val.trim())
+                    .filter((val)=> val.length > 0);
+                    res = res.join("\n");
+                    filename = "split.txt";
 
-    let filename = "uppercase.txt";
-    readTxt.then((res)=>{
-        return new Promise((resolve , reject)=>{
-            fs.writeFile(getPath(`./data/${filename}`) , res.toUpperCase() , (err)=>{
-                if(err) reject(err);
-                else resolve(`written in ${filename}`);
-            });
-        });
-    }).then((res)=>{
-        console.log(res);
-        return new Promise((resolve , reject)=>{
-            fs.appendFile(getPath(`./data/${filenames}`) , `${filename}\n` , (err)=>{
-                if(err) reject(err);
-                else resolve(filename + " added in " + filenames);
-            })
-        });
-    }).then((res)=>{
-        console.log(res);
-        return new Promise((resolve , reject)=>{
-            fs.readFile(`./data/${filename}` , "utf-8" , (err , data)=>{
-                if(err) reject(err);
-                else resolve(data);
-            });
-        });
-    }).then((res)=>{
-        res = 
-        res.toLowerCase().split(" ");
-        res = res.map((val)=> val.trim());
-        res = res.filter((val)=> val.length > 0);
+                    return await fs.writeFile(getPath(`./data/${filename}`) , res)
+                    .then(async()=>{
+                        return await fs.appendFile(getPath(`./data/${filenames}`) , filename + "\n")
+                        .then(async()=>{
+                            return await fs.readFile(getPath(`./data/${filename}`) , "utf-8")
+                            .then(async(res)=>{
+                                res = res.split("\n").filter((val) => val.trim().length)
+                                .sort()
+                                .join("\n");
+                                filename = "sort.txt";
+                                return await fs.writeFile(getPath(`./data/${filename}`) , res )
+                                .then(async()=>{
+                                    return await fs.appendFile(getPath(`./data/${filenames}`) , filename + "\n")
+                                    .then(async()=>{
+                                        setTimeout(async()=>{
+                                            return await fs.readFile(getPath(`./data/${filenames}`) , "utf-8")
+                                            .then(async(res)=>{
+                                                let fileList = res.split("\n")
+                                                .filter((val)=> val.trim().length > 0);
+                                                fileList.push(filenames);
 
-        filename = "split.txt";
+                                                let promisesList = [];
+                                                fileList.forEach(async(file)=>{
+                                                    const proise = await fs.unlink(getPath(`./data/${file.trim()}`))
+                                                    .then(()=> console.log(`${file} is deleted !`))
+                                                    .catch((err)=> console.log(err));
 
-        return new Promise((resolve , reject)=>{
-            fs.writeFile(getPath(`./data/${filename}`) , res.join("\n") , (err)=>{
-                if(err) reject(err);
-                else resolve(`written in ${filename} by spliting the sentence wise`);
-            });
-        });
-    }).then((res)=>{
-        console.log(res);
-        return new Promise((resolve , reject)=>{
-            fs.appendFile(getPath(`./data/${filenames}`) , `${filename}\n` , (err)=>{
-                if(err) reject(err);
-                else resolve(`${filename} added to ${filenames}`);
-            });
-        });
-    }).then((res)=>{
-        console.log(res);
-        return new Promise((resolve , reject)=>{
-            fs.readFile(getPath(`./data/${filename}`) , "utf-8" , (err , data)=>{
-                if(err) reject(err);
-                else resolve(data);
-            });
-        });
-    }).then((res)=>{
-        res = res.split("\n").sort().join("\n");
-        filename = "sort.txt";
-
-        return new Promise((resolve , reject)=>{
-            fs.writeFile(getPath(`./data/${filename}`) , res , (err)=>{
-                if(err) reject(err);
-                else resolve(`added text in ${filename}`);
-            });
-        });
-    }).then((res)=>{
-        console.log(res);
-        return new Promise((resolve , reject)=>{
-            fs.appendFile(getPath(`./data/${filenames}`) , `${filename}\n` , (err)=>{
-                if(err) reject(err);
-                else resolve(`${filename} added to ${filenames}`);
-            });
-        });
-    }).then((res)=>{
-        console.log(res);
-        
-        return new Promise((resolve , reject)=>{
-            fs.readFile(getPath(`./data/${filenames}`) , "utf-8" , (err , data)=>{
-                if(err) reject(err);
-                else resolve(data);
-            });
-        });
-    }).then((res)=>{
-        res = res.split("\n");
-        res = res.map((val)=> val.trim()).filter((val)=> val.length>0);
-        res.push(filenames);
-        console.log(res);
-        const promises = [];
-
-        res.forEach((file)=>{
-            const promise = new Promise((resolve , reject)=>{
-                setTimeout(()=>{
-                    fs.unlink(getPath(`./data/${file}`), (err)=>{
-                        if(err) reject(err);
-                        else resolve(`${file} deleted !`);
+                                                    promisesList.push(proise);
+                                                });
+                                                return await promisesList;
+                                            });
+                                        } , 10000);
+                                    });
+                                });
+                            });
+                        });
                     });
-                }, 5000);
+                });
             });
-            promises.push(promise);
         });
-        return Promise.allSettled(promises);
-    }).then((res)=>console.log(res))
-    .catch((err)=> console.log(err));
-    
+    }).catch((err)=> console.log(err));
 }
 
 function getPath(__path){
