@@ -1,3 +1,3 @@
-import problem2 from "../problem2.js";
+const problem2 = require("../problem2.js");
 
 problem2();

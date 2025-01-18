@@ -5,75 +5,105 @@
         1. Create a directory of random JSON files
         2. Delete those files simultaneously 
 */
-import fs from 'fs';
-import { fileURLToPath } from 'url';
-import path from 'path';
+const fs = require("fs");
+const path = require("path");
+const directory = path.resolve(__dirname , "/output")
 
 function createDir(){
 
-    const dir = fileURLToPath(import.meta.url);
-    const currDir = dir.substring(0 , dir.lastIndexOf("/")+1);
     const randomFileName = getRandomString(10);
-    const fullPath = path.resolve(currDir , `./output/${randomFileName}.json`);
+    const fullPath = path.resolve(__dirname , `./output/${randomFileName}.json`);
     const data = getRandomJsonObject(20);
 
-    //creating output dir
-    const directory = path.resolve(currDir , "./output");
-    if(!fs.existsSync(directory)){
+    const promise = new Promise((resolve , reject)=>{
+        if(!fs.existsSync(directory)) resolve();
+        else reject();
+    });
+
+    promise
+    .then(()=> {
         //creating dir
         cretingDirAndWritingFile(fullPath , data);
-        return ;
-    }
-
-    console.log("output dir already created");
-    //writing the file if dir already present
-    writeFile(fullPath , data);
-}
-
-function cretingDirAndWritingFile(fullPath , data){
-    fs.mkdir( fullPath.substring(0 , fullPath.lastIndexOf("/")+1) , (err)=>{
-        if(err){
-            console.log("error in creating dir with name output");
-            return ;
-        }
-        console.log("dir output created");
-        //writeing the file
+        console.log("output dir created !");
+    })
+    .catch(()=>{
+        console.log("output dir already created");
+        //writing the file if dir already present
         writeFile(fullPath , data);
     });
 }
 
+function cretingDirAndWritingFile(fullPath , data){
+    const promise= new Promise((resolve , reject)=>{
+        fs.mkdir( fullPath.substring(0 , fullPath.lastIndexOf("/")+1) , (err)=>{
+            if(err){
+                reject("path already exist");
+                return ;
+            }
+            console.log("dir output created");
+            resolve();
+        });
+    });
+   
+    promise
+    .then(() =>writeFile(fullPath , data))
+    .catch((error)=> console.log(error));
+}
+
 //writing and deleting at same time
 function writeFile(fullPath , data ){
-    fs.writeFile(fullPath , JSON.stringify(data , null , 2) ,'utf-8', (err)=>{
-        if(err) {
-            console.log(err , "write in file failed !");
-            return ;
-        }
-        console.log(`${fullPath.substring(fullPath.lastIndexOf("/")+1)} file writen successfully`)
-        unlinkFile(fullPath);
+
+    const promise = new Promise((resolve , reject)=>{
+        fs.writeFile(fullPath , JSON.stringify(data , null , 2) ,'utf-8', (err)=>{
+            if(err) {
+                reject(err);
+                return ;
+            }
+            resolve(`${fullPath.substring(fullPath.lastIndexOf("/")+1)} file writen successfully`);
+        });
     });
+
+    promise
+    .then((res)=>{
+        console.log(res);
+        unlinkFile(fullPath);
+    })
+    .catch((err)=> console.log(err));
 }
 
 //deleting the file/dir
 function unlinkFile(fullPath){
-
-    if(fs.existsSync(fullPath)){
-        fs.unlink(fullPath , (err)=>{
-            if(err) {
-                console.log("error in deleting the file");
-                return ;
-            }
-            console.log(`${fullPath.substring(fullPath.lastIndexOf("/")+1)} deleted`);
-            unlinkDir(fullPath.substring(0 , fullPath.lastIndexOf("/")));
+    isExists(fullPath)
+    .then((res)=>{
+        const fileUnlink = new Promise((resolve , reject)=>{
+            fs.unlink(fullPath , (err)=>{
+                if(err) {
+                    reject(err);
+                    return ;
+                }
+                resolve(`${fullPath.substring(fullPath.lastIndexOf("/")+1)} deleted`);
+            });
         });
-        return ;
-    }
-    console.log(`${fullPath.substring(fullPath.lastIndexOf("/")+1)} is not persent`);
+
+        fileUnlink
+        .then((res)=>{
+            console.log(res);
+            unlinkDir(fullPath.substring(0 , fullPath.lastIndexOf("/")));
+        }).catch((err)=>{
+            console.log(err);
+        })
+        console.log(res)
+    })
+    .catch((error)=>{
+        console.log(error);
+    });
 }
 
 //deleting dir
 function unlinkDir(directory){
-    if(fs.existsSync(directory)){
+    isExists(directory)
+    .then((res)=>{
+
         fs.rm(directory, {recursive:true , force:true} , (err)=>{
             if(err) {
                 console.log(err , "deleting dir. failed ");
@@ -81,9 +111,19 @@ function unlinkDir(directory){
             }
             console.log("dir is deleted");
         });
-        return ;
-    }
-    console.log("dir is not present");
+        console.log(res);
+    }).catch((err)=>{
+        console.log(err);
+    });
+}
+
+function isExists(fullPath){
+    return new Promise((resolve , reject)=>{
+        if(fs.existsSync(fullPath)){
+            resolve(`${fullPath} is exists !`);
+        }
+        else reject(`${fullPath} is not exists !`);
+    });
 }
 
 //geting random json object by calling the method
@@ -109,4 +149,4 @@ function getRandomString(length){
     return result;
 }
 
-export default createDir;
+module.exports = createDir;

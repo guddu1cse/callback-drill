@@ -12,104 +12,125 @@
         5. Read the contents of filenames.txt and delete all the new files that are mentioned in that list simultaneously.
 */
 
-import fs from 'fs';
-import { fileURLToPath } from 'url';
-import path from 'path';
-
-const currPath = fileURLToPath(import.meta.url);
-const currDir = currPath.substring(0 , currPath.lastIndexOf("/")+1);
+const fs = require('fs');
+const path = require('path');
 
 function problem2(){
     const filenames = "filenames.txt";
-    //step-1
-    fs.readFile(getPath("./data/lipsum_1.txt"), "utf-8" , (err , data)=>{
-        if(err) {
-            console.log(err);
-            return ;
-        }
-        let newFile = "uppercase.txt";
+    //step -1 read the lipsum_2.txt
+    const readTxt = new Promise((resolve , reject)=>{
+        fs.readFile(getPath("./data/lipsum_2.txt") , "utf-8" , (err , data)=>{
+            if(err) reject(err);
+            else resolve(data);
+        })
+    });
 
-        //step -2
-        fs.writeFile(getPath(`./data/${newFile}`) , data.toUpperCase() ,
-         (err)=>{
-            if(err){
-                console.log(err);
-                return ;
-            }
-            fs.appendFile(getPath(`./data/${filenames}`) , newFile + "\n" , (err)=>{
-                if(err){
-                    console.log(err);
-                    return ;
-                }
-
-                fs.readFile(getPath(`./data/${newFile}`) , "utf-8" , (err , data)=>{
-                    if(err){
-                        console.log(err);
-                        return ;
-                    }
-                    data = data.toLowerCase().split(" ").join("\n");
-                    newFile = "lowercasesplitwise.txt";
-
-                    //step -3
-                    fs.writeFile(getPath(`./data/${newFile}`) , data , (err)=>{
-                        if(err){
-                            console.log(err);
-                            return ;
-                        }
-                        fs.appendFile(getPath(`./data/${filenames}`) , newFile+"\n" , (err)=>{
-                            if(err){
-                                console.log(err);
-                                return ;
-                            }
-                            fs.readFile(getPath(`./data/${newFile}`) , "utf-8" , (err , data)=>{
-                                if(err){
-                                    console.log(err);
-                                    return ;
-                                }
-                                //sorting the data, step -4
-                                data = data.split("\n").sort().filter((val)=> val.trim().length != 0).join("\n");
-                                newFile = "sort.txt";
-                                fs.writeFile(getPath(`./data/${newFile}`) , data , (err)=>{
-                                    if(err){
-                                        console.log(err);
-                                        return ;
-                                    }
-                                    fs.appendFile(getPath(`./data/${filenames}`) , newFile+"\n" , (err)=>{
-                                        if(err){
-                                            console.log(err);
-                                            return ;
-                                        }
-                                        
-                                        fs.readFile(getPath(`./data/${filenames}`) , "utf-8" , (err , data)=>{
-                                            if(err){
-                                                console.log(err);
-                                                return ;
-                                            }
-                                            //step -5
-                                            data = data.split("\n").map((val)=>val.trim()).filter((val)=> val.length != 0);
-                                            for(const val of data){
-                                                fs.unlink(getPath(`./data/${val}`) , (err)=>{
-                                                    if(err){
-                                                        console.log(err);
-                                                        return ;
-                                                    }
-                                                    console.log(`${val} deleted`);
-                                                });
-                                            }
-                                        });
-                                    });
-                                });
-                            });
-                        });
-                    });
-                });
+    let filename = "uppercase.txt";
+    readTxt.then((res)=>{
+        return new Promise((resolve , reject)=>{
+            fs.writeFile(getPath(`./data/${filename}`) , res.toUpperCase() , (err)=>{
+                if(err) reject(err);
+                else resolve(`written in ${filename}`);
             });
         });
-    });
+    }).then((res)=>{
+        console.log(res);
+        return new Promise((resolve , reject)=>{
+            fs.appendFile(getPath(`./data/${filenames}`) , `${filename}\n` , (err)=>{
+                if(err) reject(err);
+                else resolve(filename + " added in " + filenames);
+            })
+        });
+    }).then((res)=>{
+        console.log(res);
+        return new Promise((resolve , reject)=>{
+            fs.readFile(`./data/${filename}` , "utf-8" , (err , data)=>{
+                if(err) reject(err);
+                else resolve(data);
+            });
+        });
+    }).then((res)=>{
+        res = 
+        res.toLowerCase().split(" ");
+        res = res.map((val)=> val.trim());
+        res = res.filter((val)=> val.length > 0);
+
+        filename = "split.txt";
+
+        return new Promise((resolve , reject)=>{
+            fs.writeFile(getPath(`./data/${filename}`) , res.join("\n") , (err)=>{
+                if(err) reject(err);
+                else resolve(`written in ${filename} by spliting the sentence wise`);
+            });
+        });
+    }).then((res)=>{
+        console.log(res);
+        return new Promise((resolve , reject)=>{
+            fs.appendFile(getPath(`./data/${filenames}`) , `${filename}\n` , (err)=>{
+                if(err) reject(err);
+                else resolve(`${filename} added to ${filenames}`);
+            });
+        });
+    }).then((res)=>{
+        console.log(res);
+        return new Promise((resolve , reject)=>{
+            fs.readFile(getPath(`./data/${filename}`) , "utf-8" , (err , data)=>{
+                if(err) reject(err);
+                else resolve(data);
+            });
+        });
+    }).then((res)=>{
+        res = res.split("\n").sort().join("\n");
+        filename = "sort.txt";
+
+        return new Promise((resolve , reject)=>{
+            fs.writeFile(getPath(`./data/${filename}`) , res , (err)=>{
+                if(err) reject(err);
+                else resolve(`added text in ${filename}`);
+            });
+        });
+    }).then((res)=>{
+        console.log(res);
+        return new Promise((resolve , reject)=>{
+            fs.appendFile(getPath(`./data/${filenames}`) , `${filename}\n` , (err)=>{
+                if(err) reject(err);
+                else resolve(`${filename} added to ${filenames}`);
+            });
+        });
+    }).then((res)=>{
+        console.log(res);
+        
+        return new Promise((resolve , reject)=>{
+            fs.readFile(getPath(`./data/${filenames}`) , "utf-8" , (err , data)=>{
+                if(err) reject(err);
+                else resolve(data);
+            });
+        });
+    }).then((res)=>{
+        res = res.split("\n");
+        res = res.map((val)=> val.trim()).filter((val)=> val.length>0);
+        res.push(filenames);
+        console.log(res);
+
+        res.forEach((file)=>{
+            setTimeout(()=>{
+                fs.unlink(getPath(`./data/${file}`), (err)=>{
+                    if(err) console.log(err);
+                    else console.log(`${file} deleted !`);
+                });
+            }, 5000);
+        });
+    })
+    .catch((err)=> console.log(err));
+    
 }
 
 function getPath(__path){
-    return path.resolve(currDir , __path);
+    return path.resolve(__dirname , __path);
 }
 
-export default problem2;
+function print(res){
+    console.log(res);
+}
+
+module.exports =  problem2;

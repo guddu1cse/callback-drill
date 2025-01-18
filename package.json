@@ -2,7 +2,7 @@
   "name": "callback-drills",
   "version": "1.0.0",
   "main": "problem1.js",
-  "type": "module",
+  "type": "commonjs",
   "directories": {
     "test": "test"
   },
