@@ -13,32 +13,32 @@ const directory = path.resolve(__dirname , "./data/output");
     const fullPath = path.resolve(__dirname , `./data/output/${randomFileName}.json`);
     const data = getRandomJsonObject(20);
 
-function createDir(){
+async function createDir(){
 
-    fs.access(directory)
-    .then((res)=>{
+    return await fs.access(directory)
+    .then(async(res)=>{
         console.log("file exist");
-        writeFile();
-    }).catch((error)=>{
+        return await writeFile();
+    }).catch(async(error)=>{
         console.log("error->" ,error);
-        createDir();
+        return await createDir();
     });
 }
 
-function createDir(){
-    fs.mkdir(directory).then(()=>{
-         writeFile();
+async function createDir(){
+    return await fs.mkdir(directory).then(async()=>{
+         return await writeFile();
     });
 }
 
-function writeFile(){
-     fs.writeFile(fullPath , JSON.stringify(data , null, 2) ).then(()=>{
-        setTimeout(()=>{
-             fs.unlink(fullPath).then(()=>{
+async function writeFile(){
+     return await fs.writeFile(fullPath , JSON.stringify(data , null, 2) ).then(()=>{
+        setTimeout(async()=>{
+             return await fs.unlink(fullPath).then(()=>{
                 console.log(`${randomFileName} is deleted !`);
 
-                setTimeout(()=>{
-                    fs.rm(directory , {recursive : true});
+                setTimeout(async()=>{
+                    return await fs.rm(directory , {recursive : true});
                 },10000);
             });
         } , 10000);
